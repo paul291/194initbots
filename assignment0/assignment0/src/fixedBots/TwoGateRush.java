@@ -29,23 +29,25 @@ import edu.berkeley.nlp.starcraft.util.UnitUtils;
 
 public class TwoGateRush extends EmptyFixedBot {
 	JythonInterpreter jython = new JythonInterpreter();
-	private TilePosition myHome;
-	private TilePosition mySPLoc;
 	
 	private List<Unit> myZealots;
 	private List<Unit> myGateways;
+	private Set<TilePosition> scouted;
+	private List<String> buildOrder;
+	private TilePosition myHome;
+	private TilePosition scoutTarget;
 	
-	private final static int GAME_SPEED = 0;
-	private final static int TILE_SIZE = 32;
-	private final static int REL_X_BASE = 1470;
-	private final static int REL_Y_BASE = 1520;
-	private final static int REL_SP_LOC = 2;
-	private final static int HOME_RADIUS = 300;
-	private final static int NEARBY_DIA = 200;
+	private List<List<Unit>> squads;
 	
-	private int mySetupStage;
-	private Position rallyPoint;
-	private int SP_X_LOC;
+	private Unit scout;
+	
+	private boolean holdOrders = false;
+	
+	String probe = "Protoss Probe";
+	String pylon = "Protoss Pylon";
+	String zealot = "Protoss Zealot";
+	String gateway = "Protoss Gateway";
+	
 	
 	@Override
   public List<Cerebrate> getTopLevelCerebrates() {
@@ -56,285 +58,250 @@ public class TwoGateRush extends EmptyFixedBot {
 
 	@Override
   public void onFrame() {
-	  
-	  for(Unit u: workers) { //workers mine
+	  for(Unit u: workers) {
 	  	if(u.isIdle()) {
 	  		ROUnit closestPatch = UnitUtils.getClosest(u, Game.getInstance().getMinerals());
 	  		u.rightClick(closestPatch);
 	  	}
-	  }
-	  
-	  //build up and attack
-	  if(mySetupStage < 4)
-		  setup();
-	  else{
-		  battleCycle();
-		  myZealots.clear();
-		  List <ROUnit> zealots = UnitUtils.getAllMy(UnitType.getUnitType("Protoss Zealots"));
-		  for(ROUnit z: zealots){
-			  if(true){
-				  myZealots.add(UnitUtils.assumeControl(z));
-			  }
-		  }
-		  
-	  }
+	  }  
+	  scout();
+	  buildNext();
+	  attack();
 	  
   }
-	
-	public List<ROUnit> enemyUnits(){
-		List<ROUnit> units = new ArrayList<ROUnit>();
-		for(ROUnit u: Game.getInstance().getAllUnits()){
-			if(Game.getInstance().self().isEnemy(u.getPlayer()))
-				units.add(u);
-		}
-		return units;
-	}
-	
-	public void setup(){
-		switch(mySetupStage){
-			case 0: case 1:
-				if(createUnit("Protoss Probe",findFurthest(myBases,rallyPoint)))
-					mySetupStage++;
-				break;
-			case 2:
-				if(createUnit("Protoss Gateway",findClosest(workers,mySPLoc)))
-					mySetupStage++;
-				break;
-			case 6:
-				if(createUnit("Protoss Pylon",findFurthest(workers,rallyPoint)))
-					mySetupStage++;
-				break;
-			default:
-				break;
-		}
-	}
-	
-	public Unit findClosest(List<Unit> units, TilePosition p){
-		int x = p.x()*TILE_SIZE;
-		int y = p.y()*TILE_SIZE;
-		return findClosest(units,new Position(x,y));
-	}
-	
-	public Unit findClosest(List<Unit> units, Position p){
-		double best = 10000;
-		Unit bestu = null;
-	
-		for(Unit u: units){
-			double d = u.getDistance(p);
-			if(d < best){
-				best = d;
-				bestu = u;
-			}
-		}
-		return bestu;
-	}
-	
-	public Unit findFurthest(List<Unit> units, Position p){
-		double best = -10000;
-		Unit bestu = null;
-	
-		for(Unit u: units){
-			double d = u.getDistance(p);
-			if(d > best){
-				best = d;
-				bestu = u;
-			}
-		}
-		return bestu;
-	}
-	
-	public void battleCycle(){
-		send();
-	}
-	
-	public void send(){
-		
-		for(Unit u: myZealots){
-			int homeDist = Math.abs(u.getPosition().x()-myHome.x()*TILE_SIZE);
-			if(homeDist < HOME_RADIUS && enemyUnits().isEmpty())
-				u.rightClick(rallyPoint);
-			else{
-				if(u.isIdle()){
-					Unit t = selectTarget(u);
-					if(t!=null)
-						u.rightClick(t);
-					else{
-						Position p = randomNearby(u,NEARBY_DIA);
-						u.attackMove(p);
+	public void scout(){
+		if(scout == null && workers.size() > 9)
+			scout = workers.get(1);
+		if(scout!=null){
+			if(scoutTarget == null){
+				for(TilePosition tp: myMap.getStartSpots()){
+					if(!scouted.contains(tp)){
+						scoutTarget = tp;
+						break;
 					}
 				}
-				
-				if(u.getOrderTarget()!=null && u.getOrderTarget().getType().isBuilding()){
-					Unit t = selectTarget(u);
-					if(t!=null&&!t.getType().isBuilding())
-						u.rightClick(t);
+			}
+			if(scoutTarget!=null){
+				scout.rightClick(scoutTarget);
+		
+				if(close(scout.getTilePosition(),scoutTarget)){
+					scouted.add(scoutTarget);
+					scoutTarget = null;
 				}
 			}
 		}
 	}
 	
-	public Position randomNearby(Unit u, int dist){
-		int dx = (int)(Math.random()*dist-dist/2);
-		int dy = (int)(Math.random()*dist-dist/2);
-		int x = u.getPosition().x();
-		int y = u.getPosition().y();
-		int newx = x+dx;
-		int newy = y+dy;
-		Position p =  new Position(x+dx,y+dy);
-		if(Game.getInstance().mapHeight()*TILE_SIZE>newy 
-			&& Game.getInstance().mapWidth()*TILE_SIZE > newx
-			&& newx > 0 && newy > 0)
-			return p;
-		else
-			return rallyPoint;
+	public boolean close(TilePosition t1, TilePosition t2){
+		int x = Math.abs(t1.x() - t2.x());
+		int y = Math.abs(t1.y() - t2.y());
+		return x+y < 7;
 	}
 	
-	
-	public Unit selectTarget(Unit u){
-		Unit target = null;
-		target = findEnemyType("Protoss Zealot",u);
-		if(target == null)
-			target = findEnemyType("Protoss Probe",u);
-		if(target == null)
-			target = findEnemyType("building",u);
-		return target;
-	}
-	
-	public Unit findEnemyType(String type, Unit me){
-		List<ROUnit> enemies = enemyUnits();
-		if(type.equals("building")){
-			if(!enemies.isEmpty()){
-				//if(u.getType().isBuilding()){
-					return (Unit) UnitUtils.getClosest(me, enemies);
-				//}
-			}
-		}else{
-			List <ROUnit> possibleTargets = new ArrayList<ROUnit>();
-			for(ROUnit u: enemies){
-				if(u.getType().getName().equals(type)){
-					possibleTargets.add(u);
-				}
-			}
-			return (Unit) UnitUtils.getClosest(me, possibleTargets);
+	public void attack(){
+		int idleCount = 0;
+		for(Unit z: myZealots){
+			if(z.isIdle())
+				idleCount++;
 		}
 		
-		return null;
+		if(idleCount >=2){
+			ROUnit target = null;
+			for(ROUnit b: myMap.getBuildings()){
+				if(!b.getPlayer().equals(Game.getInstance().self())){
+					target = b;
+					break;
+				}
+			}
+			if(target!=null){
+				for(Unit z: myZealots){
+					z.attackMove(target.getLastKnownPosition());
+				}
+			}
+		}
 	}
 	
-	public boolean createUnit(String name, Unit u){
+	public void buildNext(){
+		if(!buildOrder.isEmpty()&&!holdOrders){
+			if(createUnit(buildOrder.get(0)))
+				buildOrder.remove(0);
+		}
+		
+		if(buildOrder.isEmpty()&&!holdOrders){
+			if(getSupply() < 3)
+				buildOrder.add(pylon);
+			else
+				buildOrder.add(zealot);
+		}
+	}
+	
+	
+	public boolean createUnit(String name){
+		Unit u = null;
+		if(UnitType.getUnitType(name).isBuilding())
+			u = workers.get(0);
+		else if(name.equals("Protoss Zealot")){
+			if(myGateways.isEmpty()){
+				//buildOrder.add(0, gateway);
+				return false;
+			}
+				
+			for(Unit a: myGateways){
+				if(a.getTrainingQueue().isEmpty()&&!a.isBeingConstructed())
+					u = a;
+			}
+		}
+		
 		if(name.equals("Protoss Probe")){
-			if(Game.getInstance().self().minerals() >= 50 && getSupply() > 1){
+			if(Game.getInstance().self().minerals() >= 50 && getSupply() >= 1){
 				  myBases.get(0).train(UnitType.getUnitType(name));
-			  }
-		}else if(name.equals("Protoss Gateway")){
-			if(getMinerals() >= 150){
-				  if(u.canBuildHere(mySPLoc, UnitType.getUnitType(name)))
-				  	u.build(mySPLoc, UnitType.getUnitType(name));
-				  else{
-					TilePosition p = new TilePosition(myHome.x(),myHome.y()+3);
-					u.build(p, UnitType.getUnitType(name));
-				  }
 				  return true;
+			  }
+		}else if(name.equals("Protoss Gateway") && getMinerals() >= 150){
+			if(getMinerals() >= 150){
+				TilePosition tp;
+				UnitType type = UnitType.getUnitType(name);
+				for(int r = 19; r < 20; r++){
+					tp = findBuildRadius(myHome,r,u,type);
+					if(tp!=null){
+						u.build(tp, type);
+						System.out.println(getMinerals());
+						holdOrders = true;
+						return true;
+					}
+				}
+				return false;
 			}
 		}else if(name.equals("Protoss Zealot")){
-			if(getMinerals() >= 100 && getSupply() > 2){
-				myGateways.get(0).train(UnitType.getUnitType(name));
-				return true;
+			if(getMinerals() >= 100 && getSupply() >= 2){
+				if(u != null){
+					System.out.println(UnitType.getUnitType(name));
+					u.train(UnitType.getUnitType(name));
+					System.out.println(u.canMake(UnitType.getUnitType(name)));
+					return true;
+				}
 			}
 		}else if(name.equals("Protoss Pylon")){
 			if(getMinerals() >= 100){
-				TilePosition p = new TilePosition(myHome.x(),myHome.y()-2);
-				u.build(p, UnitType.getUnitType(name));
-				return true;
+				TilePosition tp;
+				UnitType type = UnitType.getUnitType(name);
+				for(int r = 19; r < 20; r++){
+					tp = findBuildRadius(myHome,r,u,type);
+					if(tp!=null){
+						u.build(tp, type);
+						holdOrders = true;
+						return true;
+					}
+				}
+				  return false;
 			}
 		}
 		
 		return false;
 	}
-	
-	public int getMinerals(){
-		return Game.getInstance().self().minerals();
-	}
-	
-	public int getSupply(){
-		return Game.getInstance().self().supplyTotal() - Game.getInstance().self().supplyUsed();
-	}
 
 	@Override
   public void onStart() {
-		//System.out.println(Game.getInstance().mapHeight()*TILE_SIZE);
-		
-		Game.getInstance().setLocalSpeed(GAME_SPEED);
-		mySetupStage = 0;
-		myHome = Game.getInstance().self().getStartLocation();
 		super.onStart();
-		if(myHome.x()*TILE_SIZE > Game.getInstance().getMapHeight()/2*TILE_SIZE){
-			rallyPoint = new Position(-REL_X_BASE+myHome.x()*TILE_SIZE,-REL_Y_BASE+myHome.y()*TILE_SIZE);
-			SP_X_LOC = 4;
+		
+		myGateways = new ArrayList<Unit>();
+		myZealots = new ArrayList<Unit>();
+		buildOrder = new ArrayList<String>();
+		scouted = new HashSet<TilePosition>();
+		scouted.add(myHome);
+		String probe = "Protoss Probe";
+		String pylon = "Protoss Pylon";
+		String zealot = "Protoss Zealot";
+		String gateway = "Protoss Gateway";
+		
+		buildOrder.add(probe);
+		buildOrder.add(probe);
+		buildOrder.add(probe);
+		buildOrder.add(probe);
+		buildOrder.add(pylon);
+		buildOrder.add(gateway);
+		buildOrder.add(gateway);
+		buildOrder.add(probe);
+		buildOrder.add(probe);
+		buildOrder.add(zealot);
+		buildOrder.add(probe);
+		buildOrder.add(pylon);
+		for(int i = 0; i< 6; i++){
+			buildOrder.add(zealot);
 		}
-		else{
-			SP_X_LOC = -3;
-			rallyPoint = new Position(REL_X_BASE+myHome.x()*TILE_SIZE,REL_Y_BASE+myHome.y()*TILE_SIZE);
+		buildOrder.add(pylon);
+		for(int i = 0; i< 4; i++){
+			buildOrder.add(zealot);
 		}
 		
-		mySPLoc = new TilePosition(myHome.x()+SP_X_LOC,(myHome.y()-REL_SP_LOC));
+		myHome = Game.getInstance().self().getStartLocation();;
 	}
 	
-	public void printLoc(Position pos){
-		System.out.println("(" + pos.x() + "," + pos.y() + ")");
-	}
 
 	@Override
   public void onUnitCreate(ROUnit unit) {
-		if(unit.getType().getName().equals("Protoss Probe") && !workers.contains(unit))
+		if(unit.getType().getName().equals("Protoss Probe"))
 			workers.add(UnitUtils.assumeControl(unit));
-  }
-
-
-	@Override
-  public void onUnitHide(ROUnit unit) {
-	  
-  }
-
-	@Override
-  public void onUnitMorph(ROUnit unit) {
-  }
-
-	@Override
-  public void onEnd(boolean isWinnerFlag) {
-	  
+		
+		if(unit.getType().getName().equals(gateway) && !myGateways.contains(unit)){
+			myGateways.add(UnitUtils.assumeControl(unit));
+			holdOrders = false;
+		}
+		
+		if(unit.getType().getName().equals(pylon)){
+			holdOrders = false;
+		}
+		
+		if(unit.getType().getName().equals(zealot)){
+			myZealots.add(UnitUtils.assumeControl(unit));
+		}
   }
 	
-	// Feel free to add command and things here.
-	// bindFields will bind all member variables of the object
-	// commands should be self explanatory...
-	protected void initializeJython() {
-		jython.bindFields(this);
-		jython.bind("game", Game.getInstance());
-		jython.bindIntCommand("speed",new Command<Integer>() {
-			@Override
-      public void call(Integer arg) {
-				Game.getInstance().printf("Setting speed to %d",arg);
-	      Game.getInstance().setLocalSpeed(arg);	      
-      }
-		});
-		jython.bindThunk("reset",new Thunk() {
-
-			@Override
-      public void call() {
-				initializeJython();
-	      
-      }
-			
-		});
-		
-  }
-
+	@Override
+	public void onUnitShow(ROUnit unit){
+		super.onUnitCreate(unit);
+		System.out.println("yello");
+		if(unit.getType().isResourceContainer()){
+			myMap.addBuilding(unit);
+			System.out.println("rello");
+		}
+		System.out.println(unit.getPlayer().equals(Game.getInstance().self()));
+		if(unit.getTilePosition().equals(scoutTarget))
+			scoutTarget = null;
+	}
 
 	@Override
 	public void setUpBuildOrder() {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public TilePosition findBuildRadius(TilePosition c, int radius, Unit u, UnitType t){
+		TilePosition tp;
+		TilePosition next;
+		TilePosition prev;
+		TilePosition top;
+		TilePosition bottom;
+		UnitType bigU = UnitType.getUnitType(gateway);
+		for(int y = -radius; y <= radius; y+=1){
+			for(int x = -radius; x <= radius; x+=1){
+				tp = new TilePosition(c.x()+x,c.y()+y);
+				next = new TilePosition(c.x()+x+2,c.y()+y);
+				prev = new TilePosition(c.x()+x-2,c.y()+y);
+				top = new TilePosition(c.x()+x,c.y()+y+2);
+				bottom = new TilePosition(c.x()+x,c.y()+y-2);
+				if(t.getName().equals(pylon)){
+					if(u.canBuildHere(tp, t)&&u.canBuildHere(next, t)&&
+							u.canBuildHere(prev, t)&& u.canBuildHere(bottom, t) && u.canBuildHere(top,t))
+						return tp;
+					
+				}else if(u.canBuildHere(tp, t))
+					return tp;
+				/*if(u.canBuildHere(tp,t))
+					return tp;*/
+			}
+		}
+		return null;
 	}
 
 }

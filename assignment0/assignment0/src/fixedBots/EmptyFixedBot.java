@@ -33,7 +33,9 @@ public abstract class EmptyFixedBot extends AbstractCerebrate implements Strateg
 	protected Race myRace;
 	protected SCMap myMap;
   
-
+	private final static int GAME_SPEED = 0;
+	private final static int TILE_SIZE = 32;
+	
 	@Override
   public List<Cerebrate> getTopLevelCerebrates() {
 		initializeJython();
@@ -61,7 +63,7 @@ public abstract class EmptyFixedBot extends AbstractCerebrate implements Strateg
 		myBases = new ArrayList<Unit>();
 		myRace = Game.getInstance().self().getRace();
 		myMap = new SCMap();
-		
+		Game.getInstance().setLocalSpeed(GAME_SPEED);
 		for(ROUnit u: Game.getInstance().self().getUnits()) {
 			if(u.getType().isWorker()) {
 				workers.add(UnitUtils.assumeControl(u));
@@ -108,6 +110,107 @@ public abstract class EmptyFixedBot extends AbstractCerebrate implements Strateg
   public void onEnd(boolean isWinnerFlag) {
 	  
   }
+	
+	
+	public int getMinerals(){
+		return Game.getInstance().self().minerals();
+	}
+	
+	public int getSupply(){
+		return Game.getInstance().self().supplyTotal() - Game.getInstance().self().supplyUsed();
+	}
+	
+	public Position randomNearby(Unit u, int dist){
+		int dx = (int)(Math.random()*dist-dist/2);
+		int dy = (int)(Math.random()*dist-dist/2);
+		int x = u.getPosition().x();
+		int y = u.getPosition().y();
+		int newx = x+dx;
+		int newy = y+dy;
+		Position p =  new Position(x+dx,y+dy);
+		if(Game.getInstance().mapHeight()*TILE_SIZE>newy 
+			&& Game.getInstance().mapWidth()*TILE_SIZE > newx
+			&& newx > 0 && newy > 0)
+			return p;
+		return p;
+	}
+	
+	
+	public Unit selectTarget(Unit u){
+		Unit target = null;
+		target = findEnemyType("Protoss Zealot",u);
+		if(target == null)
+			target = findEnemyType("Protoss Probe",u);
+		if(target == null)
+			target = findEnemyType("building",u);
+		return target;
+	}
+	
+	public Unit findEnemyType(String type, Unit me){
+		List<ROUnit> enemies = enemyUnits();
+		if(type.equals("building")){
+			if(!enemies.isEmpty()){
+				//if(u.getType().isBuilding()){
+					return (Unit) UnitUtils.getClosest(me, enemies);
+				//}
+			}
+		}else{
+			List <ROUnit> possibleTargets = new ArrayList<ROUnit>();
+			for(ROUnit u: enemies){
+				if(u.getType().getName().equals(type)){
+					possibleTargets.add(u);
+				}
+			}
+			return (Unit) UnitUtils.getClosest(me, possibleTargets);
+		}
+		
+		return null;
+	}
+	
+	public List<ROUnit> enemyUnits(){
+		List<ROUnit> units = new ArrayList<ROUnit>();
+		for(ROUnit u: Game.getInstance().getAllUnits()){
+			if(Game.getInstance().self().isEnemy(u.getPlayer()))
+				units.add(u);
+		}
+		return units;
+	}
+	
+	
+	public Unit findClosest(List<Unit> units, TilePosition p){
+		int x = p.x()*TILE_SIZE;
+		int y = p.y()*TILE_SIZE;
+		return findClosest(units,new Position(x,y));
+	}
+	
+	public Unit findClosest(List<Unit> units, Position p){
+		double best = 10000;
+		Unit bestu = null;
+	
+		for(Unit u: units){
+			double d = u.getDistance(p);
+			if(d < best){
+				best = d;
+				bestu = u;
+			}
+		}
+		return bestu;
+	}
+	
+	public Unit findFurthest(List<Unit> units, Position p){
+		double best = -10000;
+		Unit bestu = null;
+	
+		for(Unit u: units){
+			double d = u.getDistance(p);
+			if(d > best){
+				best = d;
+				bestu = u;
+			}
+		}
+		return bestu;
+	}
+	
 	
 	// Feel free to add command and things here.
 	// bindFields will bind all member variables of the object
