@@ -23,6 +23,10 @@ public class LurkerDrop extends EmptyFixedBot{
 	String lurker = "Zerg Lurker";
 	String lurkerEgg = "Zerg Lurker Egg";
 	String larva = "Zerg Larva";
+	String lingSpeed = "Zerg Zergling Speed Upgrade";
+	String drop = "Zerg Overlord Drop Upgrade";
+	String lurker_up = "Zerg Lurker Upgrade";
+	
 	
 	boolean buildLock = false;
 	List<BuildCommand> buildOrder = new ArrayList<BuildCommand>();
@@ -96,7 +100,36 @@ public class LurkerDrop extends EmptyFixedBot{
 	@Override
 	public void setUpBuildOrder() {
 		// TODO Auto-generated method stub
-		
+		for(int i = 0; i < 5; i++) {
+			buildOrder.add(new BuildCommand(drone));
+		}
+		buildOrder.add(new BuildCommand(overlord));
+		buildOrder.add(new BuildCommand(spawningPool));
+		buildOrder.add(new BuildCommand(extractor));
+		buildOrder.add(new BuildCommand(drone));
+		buildOrder.add(new BuildCommand(drone));
+		//3 drones on gas
+		buildOrder.add(new BuildCommand(zergling));
+		buildOrder.add(new BuildCommand(zergling));
+		buildOrder.add(new BuildCommand(zergling));
+		buildOrder.add(new BuildCommand(lingSpeed));
+		buildOrder.add(new BuildCommand(drone));
+		buildOrder.add(new BuildCommand(lair));
+		buildOrder.add(new BuildCommand(overlord));
+		buildOrder.add(new BuildCommand(overlord));
+		buildOrder.add(new BuildCommand(drone));
+		buildOrder.add(new BuildCommand(drone));
+		buildOrder.add(new BuildCommand(drone));
+		buildOrder.add(new BuildCommand(drop));
+		buildOrder.add(new BuildCommand(hydra_den));
+		buildOrder.add(new BuildCommand(lurker_up));
+		buildOrder.add(new BuildCommand(hydralisk));
+		buildOrder.add(new BuildCommand(hydralisk));
+		buildOrder.add(new BuildCommand(overlord));
+		buildOrder.add(new BuildCommand(drone));
+		buildOrder.add(new BuildCommand(drone));
+		buildOrder.add(new BuildCommand(drone));
+		buildOrder.add(new BuildCommand(extractor));
 	}
 	
 	@Override

@@ -9,4 +9,9 @@ public class BuildCommand {
 		order = s;
 		loc = l;
 	}
+	
+	public BuildCommand(String s) {
+		order = s;
+		loc = NULL;
+	}
 }
