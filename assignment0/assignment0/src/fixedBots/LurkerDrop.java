@@ -1,6 +1,7 @@
 package fixedBots;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -49,6 +50,11 @@ public class LurkerDrop extends EmptyFixedBot{
 	Unit hydraDen;
 	Unit extractDrone;
 	Unit myExtractor;
+	
+	private Set<TilePosition> scouted = new HashSet<TilePosition>();
+	private boolean toScout = false;
+	private Unit scout;
+	private TilePosition scoutTarget;
 	
 	boolean dropTech;
 	boolean lurkTech;
@@ -265,7 +271,33 @@ public class LurkerDrop extends EmptyFixedBot{
 		gasFrame();
 		buildNext();
 		attack();
+		scout();
+		if(drones.size() >=9)
+			toScout = true;
+	}
+	
+	public void scout(){
+		if(ovies.isEmpty())
+			return;
+		else if(scout == null)
+			scout = ovies.get(0);
 		
+		if(toScout&&!scouted.containsAll(myMap.getStartSpots())){
+			if(scoutTarget != null) return;
+			for(TilePosition tp: myMap.getStartSpots()){
+				if(scouted.contains(tp)) continue;
+				scoutTarget = tp;
+			}
+			if(scoutTarget == null){
+				return;
+			}
+			scout.rightClick(scoutTarget);
+		}
+		
+		if(scoutTarget!=null){
+			if(close(scout.getTilePosition(), scoutTarget))
+				scoutTarget = null;
+		}
 	}
 	
 	public void attack(){
@@ -302,6 +334,7 @@ public class LurkerDrop extends EmptyFixedBot{
 	public void onStart(){
 		super.onStart();
 		setUpBuildOrder();
+		scouted.add(Game.getInstance().self().getStartLocation());
 	}
 	
 	@Override
