@@ -178,13 +178,13 @@ public abstract class EmptyFixedBot extends AbstractCerebrate implements Strateg
 	}
 	
 	
-	public ROUnit findClosest(List<ROUnit> units, TilePosition p){
+	public ROUnit findClosest(List<Unit> units, TilePosition p){
 		int x = p.x()*TILE_SIZE;
 		int y = p.y()*TILE_SIZE;
 		return findClosest(units,new Position(x,y));
 	}
 	
-	public ROUnit findClosest(List<ROUnit> units, Position p){
+	public ROUnit findClosest(List<Unit> units, Position p){
 		double best = 10000;
 		ROUnit bestu = null;
 	

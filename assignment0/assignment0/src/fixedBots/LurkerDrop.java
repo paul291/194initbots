@@ -44,49 +44,58 @@ public class LurkerDrop extends EmptyFixedBot{
 	List<Unit> lings = new ArrayList<Unit>();
 	List<Unit> hydras = new ArrayList<Unit>();
 	List<Unit> lurkers = new ArrayList<Unit>();
+	Unit spawnPool;
+	Unit hydraDen;
+	Unit extractDrone;
 	
 	public void buildNext(){
 		if(!buildOrder.isEmpty()&&!buildLock){
-			if(buildOrder.get(0).equals(lingSpeed)){
+			if(buildOrder.get(0).order.equals(lingSpeed)){
 				List<ROUnit> sp = UnitUtils.getAllMy(UnitType.getUnitType(spawningPool));
 				if(sp.isEmpty()){
 					System.out.println("No spawn pool");
 					return;
 				}else if(getMinerals() < 100 && Game.getInstance().self().gas() < 100){
-					((Unit)sp.get(0)).upgrade(UpgradeType.METABOLIC_BOOST);
+					UnitUtils.assumeControl(sp.get(0)).upgrade(UpgradeType.METABOLIC_BOOST);
 				}
-			}else if(buildOrder.get(0).equals(drop)){
+			}else if(buildOrder.get(0).order.equals(drop)){
 				List<ROUnit> lairs = UnitUtils.getAllMy(UnitType.getUnitType(lair));
 				if(lairs.isEmpty()){
 					System.out.println("No lairs");
 				}else if(getMinerals() < 200 && Game.getInstance().self().gas() < 200){
-					((Unit)lairs.get(0)).upgrade(UpgradeType.PNEUMATIZED_CARAPACE);
+					UnitUtils.assumeControl(lairs.get(0)).upgrade(UpgradeType.PNEUMATIZED_CARAPACE);
 				}
-			}else if(buildOrder.get(0).equals(lurker_up)){
+			}else if(buildOrder.get(0).order.equals(lurker_up)){
 				List<ROUnit> dens = UnitUtils.getAllMy(UnitType.getUnitType(den));
 				if(dens.isEmpty()){
 					System.out.println("No dens");
 					return;
 				} else if(getMinerals() < 200 && Game.getInstance().self().gas() < 200){
-					((Unit)dens.get(0)).research(TechType.LURKER_ASPECT);
+					UnitUtils.assumeControl(dens.get(0)).research(TechType.LURKER_ASPECT);
 				}
-			}else if(createUnit(UnitType.getUnitType(buildOrder.get(0).order),buildOrder.get(0).loc))
+			}else if(createUnit(UnitType.getUnitType(buildOrder.get(0).order),buildOrder.get(0).loc)){
 				lastOrder = buildOrder.remove(0);
-			
+			}
 		}else if(buildLock){
 			//check to see if builder still actually going to build 
-			if(!lastBuilder.getOrder().equals(Order.DRONE_BUILD)){
+			if(lastBuilder.getOrder().equals(Order.MINING_MINERALS)||
+					lastBuilder.getOrder().equals(Order.MOVE_TO_GAS)||
+					lastBuilder.getOrder().equals(Order.MOVE_TO_MINERALS)||
+					lastBuilder.getOrder().equals(Order.GUARD)){
 				buildLock = false;
+				drones.add(lastBuilder);
 				buildOrder.add(0,lastOrder);
 			}
+		}else{
+			System.out.println(lastBuilder.getOrder());
 		}
 	}
 	
 	public boolean createUnit(UnitType t, TilePosition area){
 		if(area==null){
-			List<ROUnit> bases = UnitUtils.getAllMy(UnitType.getUnitType(hatchery));
-			area = ((Unit)bases.get(0)).getTilePosition();
+			area = bases.get(0).getTilePosition();
 		}
+		//System.out.println("Trying to build " + t.getName());
 		 if(t.equals(UnitType.getUnitType(spawningPool)) || t.equals(UnitType.getUnitType(den)) 
 				|| t.equals(UnitType.getUnitType(hatchery))){
 			if(getMinerals() >= t.mineralPrice() && Game.getInstance().self().gas() >= t.gasPrice()&& !drones.isEmpty()){
@@ -98,6 +107,7 @@ public class LurkerDrop extends EmptyFixedBot{
 						morpher.build(tp,t);
 						lastBuilder = morpher;
 						buildLock = true;
+						drones.remove(morpher);
 						System.out.println("Building" + t.getName());
 						return true;
 					}
@@ -108,7 +118,12 @@ public class LurkerDrop extends EmptyFixedBot{
 			if(getMinerals() >= t.mineralPrice() && getSupply() >= t.supplyRequired()
 					&& Game.getInstance().self().gas() >= t.gasPrice() && !larvae.isEmpty()){
 				Unit morpher = (Unit)findClosest(larvae,area);
+				if(t.equals(UnitType.getUnitType(zergling)) && (spawnPool==null ||!spawnPool.isCompleted()))
+					return false;
+				if(t.equals(UnitType.getUnitType(hydralisk)) && (hydraDen==null ||!hydraDen.isCompleted()))
+					return false;
 				morpher.morph(t);
+				larvae.remove(morpher);
 				return true;
 			}
 		}else if(t.equals(UnitType.getUnitType(extractor))){
@@ -116,21 +131,25 @@ public class LurkerDrop extends EmptyFixedBot{
 				return false;
 			Set<ROUnit> geysers = myMap.getGasSpots();
 			ArrayList<Unit> geyserList = new ArrayList<Unit>();
-			for(ROUnit g: geysers){
-				geyserList.add((Unit) g);
-			}
-			ROUnit geyser = findClosest(geyserList, area);
-			Unit morpher = (Unit) findClosest(drones,area);
-			morpher.build(geyser.getTilePosition(), t);
+			//Unit morpher = (Unit)findClosest(drones,area);
+			Unit morpher = drones.get(0);
+			ROUnit closestPatch = UnitUtils.getClosest(drones.get(0), Game.getInstance().getGeysers());
+			if (closestPatch != null) {
+				drones.get(0).build(closestPatch.getTilePosition(), UnitType.getUnitType("Zerg Extractor"));
+			}else
+				return false;
+			//System.out.println(geyser);
+			//morpher.build(geyser.getTilePosition(), t);
+			//drones.remove(2);
 			lastBuilder = morpher;
 			buildLock = true;
 			System.out.println("Building extractor");
 			return true;
 		}else if(t.equals(lurker)){
-			List<ROUnit> hydras = UnitUtils.getAllMy(UnitType.getUnitType(hydralisk));
 			if(getMinerals() >= t.mineralPrice() && getSupply() >= 1
 					&& Game.getInstance().self().gas() >= t.gasPrice() && !hydras.isEmpty()){
-				((Unit)hydras.get(0)).morph(t);
+				hydras.get(0).morph(t);
+				hydras.remove(0);
 				return true;
 			}
 		}else if(t.equals(lair)){
@@ -172,7 +191,7 @@ public class LurkerDrop extends EmptyFixedBot{
 		}
 		buildOrder.add(new BuildCommand(overlord));
 		buildOrder.add(new BuildCommand(spawningPool));
-		buildOrder.add(new BuildCommand(extractor));
+		//buildOrder.add(new BuildCommand(extractor));
 		buildOrder.add(new BuildCommand(drone));
 		buildOrder.add(new BuildCommand(drone));
 		//3 drones on gas
@@ -201,14 +220,29 @@ public class LurkerDrop extends EmptyFixedBot{
 	
 	@Override
 	public void onFrame(){
-		
-		  for(Unit u: drones) {
+		for(Unit u: drones) {
 			  	if(u.isIdle()) {
+			  		
 			  		ROUnit closestPatch = UnitUtils.getClosest(u, Game.getInstance().getMinerals());
-			  		((Unit)u).rightClick(closestPatch);
+			  		u.rightClick(closestPatch);
 			  	}
-		}  
+		} 
 		buildNext();
+		if(spawnPool!=null && spawnPool.isBeingConstructed()){
+			if(extractDrone==null)
+				extractDrone = drones.get(0);
+			ROUnit closestPatch = UnitUtils.getClosest(drones.get(0), Game.getInstance().getGeysers());
+			if (closestPatch != null) {
+				extractDrone.build(closestPatch.getTilePosition(), UnitType.getUnitType("Zerg Extractor"));
+				System.out.println("success");
+			}
+		}
+	}
+	
+	@Override
+	public void onStart(){
+		super.onStart();
+		setUpBuildOrder();
 	}
 	
 	@Override
@@ -244,6 +278,34 @@ public class LurkerDrop extends EmptyFixedBot{
 		if(u.getType().equals(UnitType.getUnitType(lurker)))
 			lurkers.add(u);
 		
+	}
+	@Override
+	public void onUnitMorph(ROUnit unit){
+		if(!unit.getPlayer().equals(Game.getInstance().self()))
+			return;
+		if(((Unit)unit).getType().isBuilding()){
+			buildLock = false;
+		}
+
+		Unit u = UnitUtils.assumeControl(unit);
+		if(u.getType().equals(UnitType.getUnitType(hatchery)))
+			bases.add(u);
+		//if(u.getType().equals(UnitType.getUnitType(larva)))
+			//larvae.add(u);
+		if(u.getType().equals(UnitType.getUnitType(drone)))
+			drones.add(u);
+		if(u.getType().equals(UnitType.getUnitType(overlord)))
+			ovies.add(u);
+		if(u.getType().equals(UnitType.getUnitType(zergling)))
+			lings.add(u);
+		if(u.getType().equals(UnitType.getUnitType(hydralisk)))
+			hydras.add(u);
+		if(u.getType().equals(UnitType.getUnitType(lurker)))
+			lurkers.add(u);
+		if(u.getType().equals(UnitType.getUnitType(spawningPool)))
+			spawnPool = u;
+		if(u.getType().equals(UnitType.getUnitType(den)))
+			hydraDen = u;
 	}
 
 }
