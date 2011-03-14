@@ -87,8 +87,6 @@ public class LurkerDrop extends EmptyFixedBot{
 					lurkTech = true;
 					buildOrder.remove(0);
 				}
-			}else if(createUnit(UnitType.getUnitType(buildOrder.get(0).order),buildOrder.get(0).loc)){
-				lastOrder = buildOrder.remove(0);
 			}else if(buildOrder.get(0).order.equals(ovieSpeed)) {
 				List<ROUnit> lairs = UnitUtils.getAllMy(UnitType.getUnitType(lair));
 				if(lairs.isEmpty()){
@@ -99,6 +97,8 @@ public class LurkerDrop extends EmptyFixedBot{
 					UnitUtils.assumeControl(lairs.get(0)).upgrade(UpgradeType.PNEUMATIZED_CARAPACE);
 					buildOrder.remove(0);
 				}
+			}else if(createUnit(UnitType.getUnitType(buildOrder.get(0).order),buildOrder.get(0).loc)){
+				lastOrder = buildOrder.remove(0);
 			}
 		}else if(buildLock){
 			//check to see if builder still actually going to build 
