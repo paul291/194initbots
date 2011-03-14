@@ -197,12 +197,19 @@ public class LurkerDrop extends EmptyFixedBot{
 	
 	@Override
 	public void onFrame(){
+		List<ROUnit> minersList = UnitUtils.getAllMy(UnitType.getUnitType(drone));
 		
+		  for(Unit u: workers) {
+			  	if(u.isIdle()) {
+			  		ROUnit closestPatch = UnitUtils.getClosest(u, Game.getInstance().getMinerals());
+			  		((Unit)u).rightClick(closestPatch);
+			  	}
+		}  
+		buildNext();
 	}
 	
 	@Override
 	public void onUnitShow(ROUnit unit){
-		super.onUnitCreate(unit);
 		if(unit.getType().isBuilding()){
 			myMap.addBuilding(unit);
 		}
@@ -212,7 +219,11 @@ public class LurkerDrop extends EmptyFixedBot{
 	
 	@Override
 	public void onUnitCreate(ROUnit unit){
-		
+		if(!unit.getPlayer().equals(Game.getInstance().self()))
+				return;
+		if(((Unit)unit).getType().isBuilding()){
+			buildLock = false;
+		}
 	}
 
 }
