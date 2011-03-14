@@ -12,6 +12,6 @@ public class BuildCommand {
 	
 	public BuildCommand(String s) {
 		order = s;
-		loc = NULL;
+		loc = null;
 	}
 }

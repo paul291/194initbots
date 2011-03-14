@@ -99,6 +99,7 @@ public abstract class EmptyFixedBot extends AbstractCerebrate implements Strateg
 	
 	@Override
   public void onUnitShow(ROUnit unit) {
+
 		if(unit.getType().isBuilding()){
 			myMap.addBuilding(unit);
 		}
@@ -177,17 +178,17 @@ public abstract class EmptyFixedBot extends AbstractCerebrate implements Strateg
 	}
 	
 	
-	public Unit findClosest(List<Unit> units, TilePosition p){
+	public ROUnit findClosest(List<ROUnit> units, TilePosition p){
 		int x = p.x()*TILE_SIZE;
 		int y = p.y()*TILE_SIZE;
 		return findClosest(units,new Position(x,y));
 	}
 	
-	public Unit findClosest(List<Unit> units, Position p){
+	public ROUnit findClosest(List<ROUnit> units, Position p){
 		double best = 10000;
-		Unit bestu = null;
+		ROUnit bestu = null;
 	
-		for(Unit u: units){
+		for(ROUnit u: units){
 			double d = u.getDistance(p);
 			if(d < best){
 				best = d;
@@ -211,6 +212,11 @@ public abstract class EmptyFixedBot extends AbstractCerebrate implements Strateg
 		return bestu;
 	}
 	
+	public boolean close(TilePosition t1, TilePosition t2){
+		int x = Math.abs(t1.x() - t2.x());
+		int y = Math.abs(t1.y() - t2.y());
+		return x+y < 5;
+	}
 	
 	// Feel free to add command and things here.
 	// bindFields will bind all member variables of the object
