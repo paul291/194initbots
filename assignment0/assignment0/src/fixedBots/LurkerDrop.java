@@ -32,6 +32,7 @@ public class LurkerDrop extends EmptyFixedBot{
 	String lingSpeed = "Zerg Zergling Speed Upgrade";
 	String drop = "Zerg Overlord Drop Upgrade";
 	String lurker_up = "Zerg Lurker Upgrade";
+	String ovieSpeed = "Zerg Overlord Speed Upgrade";
 	
 	boolean buildLock = false;
 	List<BuildCommand> buildOrder = new ArrayList<BuildCommand>();
@@ -70,7 +71,7 @@ public class LurkerDrop extends EmptyFixedBot{
 				}else if(getMinerals() >= 200 && Game.getInstance().self().gas() >= 200){
 					if(lairs.get(0).isBeingConstructed())
 						return;
-					UnitUtils.assumeControl(lairs.get(0)).upgrade(UpgradeType.PNEUMATIZED_CARAPACE);
+					UnitUtils.assumeControl(lairs.get(0)).upgrade(UpgradeType.VENTRAL_SACS);
 					buildOrder.remove(0);
 					dropTech = true;
 				}
@@ -88,6 +89,16 @@ public class LurkerDrop extends EmptyFixedBot{
 				}
 			}else if(createUnit(UnitType.getUnitType(buildOrder.get(0).order),buildOrder.get(0).loc)){
 				lastOrder = buildOrder.remove(0);
+			}else if(buildOrder.get(0).order.equals(ovieSpeed)) {
+				List<ROUnit> lairs = UnitUtils.getAllMy(UnitType.getUnitType(lair));
+				if(lairs.isEmpty()){
+					System.out.println("No lairs");
+				}else if(getMinerals() >= 200 && Game.getInstance().self().gas() >= 200){
+					if(lairs.get(0).isBeingConstructed())
+						return;
+					UnitUtils.assumeControl(lairs.get(0)).upgrade(UpgradeType.PNEUMATIZED_CARAPACE);
+					buildOrder.remove(0);
+				}
 			}
 		}else if(buildLock){
 			//check to see if builder still actually going to build 
@@ -226,6 +237,7 @@ public class LurkerDrop extends EmptyFixedBot{
 		buildOrder.add(new BuildCommand(drop));
 		buildOrder.add(new BuildCommand(den));
 		buildOrder.add(new BuildCommand(lurker_up));
+		buildOrder.add(new BuildCommand(ovieSpeed));
 		buildOrder.add(new BuildCommand(hydralisk));
 		buildOrder.add(new BuildCommand(hydralisk));
 		//buildOrder.add(new BuildCommand(overlord));
