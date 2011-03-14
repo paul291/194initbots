@@ -228,14 +228,14 @@ public class LurkerDrop extends EmptyFixedBot{
 		buildOrder.add(new BuildCommand(lurker_up));
 		buildOrder.add(new BuildCommand(hydralisk));
 		buildOrder.add(new BuildCommand(hydralisk));
-		buildOrder.add(new BuildCommand(overlord));
+		//buildOrder.add(new BuildCommand(overlord));
 		buildOrder.add(new BuildCommand(drone));
 		buildOrder.add(new BuildCommand(drone));
-		buildOrder.add(new BuildCommand(drone));
-		for(int i = 0; i<3; i++){
+		//buildOrder.add(new BuildCommand(drone));
+		for(int i = 0; i<5; i++){
 			buildOrder.add(new BuildCommand(hydralisk));
 		}
-		for(int i = 0; i<5; i++){
+		for(int i = 0; i<6; i++){
 			buildOrder.add(new BuildCommand(lurker));
 		}
 		
@@ -252,7 +252,15 @@ public class LurkerDrop extends EmptyFixedBot{
 		} 
 		gasFrame();
 		buildNext();
+		attack();
 		
+	}
+	
+	public void attack(){
+		for(Unit u: lurkers){
+			if(!u.isBurrowed())
+				u.burrow();
+		}
 	}
 	
 	public void gasFrame(){
