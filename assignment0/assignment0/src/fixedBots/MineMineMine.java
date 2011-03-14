@@ -131,7 +131,7 @@ public class MineMineMine extends AbstractCerebrate implements Strategy {
 			}
 
 		};
-		new ProxyServer(factory).run();
+		new ProxyServer(factory, ProxyServer.extractPort(args.length> 0 ? args[0] : null)).run();
 
 	}
 

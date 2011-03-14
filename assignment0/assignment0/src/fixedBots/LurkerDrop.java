@@ -228,7 +228,7 @@ public class LurkerDrop extends EmptyFixedBot{
 			buildLock = false;
 		}
 		
-		Unit u = (Unit) unit;
+		Unit u = UnitUtils.assumeControl(unit);
 		if(u.getType().equals(UnitType.getUnitType(hatchery)))
 			bases.add(u);
 		if(u.getType().equals(UnitType.getUnitType(larva)))
