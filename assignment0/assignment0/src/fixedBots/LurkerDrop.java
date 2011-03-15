@@ -349,7 +349,7 @@ public class LurkerDrop extends EmptyFixedBot{
 		}
 		if(mover == null) return;
 		for(Unit u: lurkers) {
-			if(!defenders.contains(u) && mover.getLoadedUnits().size() < 2) {
+			if(!defenders.contains(u) && mover.getLoadedUnits().size() < 2 && !u.isBurrowed() && u.isIdle()) {
 				mover.load(u);
 			}
 		}
