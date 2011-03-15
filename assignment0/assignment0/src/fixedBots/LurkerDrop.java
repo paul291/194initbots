@@ -296,13 +296,14 @@ public class LurkerDrop extends EmptyFixedBot{
 	}
 	
 	public void scout(){
+		if(scouted.contains(myMap.getStartSpots()))
+			toScout = false;
 		if(ovies.isEmpty())
 			return;
 		else if(scout == null)
 			scout = ovies.get(0);
 		
 		if(toScout){
-			if(scoutTarget != null) return;
 			for(TilePosition tp: myMap.getStartSpots()){
 				if(scouted.contains(tp)) continue;
 				scoutTarget = tp;
