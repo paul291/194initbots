@@ -57,7 +57,7 @@ public class LurkerDrop extends EmptyFixedBot{
 	Unit myExtractor;
 	
 	private Set<TilePosition> scouted = new HashSet<TilePosition>();
-	private boolean toScout = false;
+	private boolean toScout = true;
 	private Unit scout;
 	private TilePosition scoutTarget;
 	private boolean buildOvie = false;
@@ -296,17 +296,18 @@ public class LurkerDrop extends EmptyFixedBot{
 		attack();
 		if(toScout)
 			scout();
-		if(drones.size() >=9)
-			toScout = true;
 	}
 	
 	public void scout(){
-		if(scouted.contains(myMap.getStartSpots()))
-			toScout = false;
 		if(ovies.isEmpty())
 			return;
 		else if(scout == null)
 			scout = ovies.get(0);
+		if(scouted.containsAll(myMap.getStartSpots())) {
+			toScout = false;
+			System.out.println("Stop Scouting");
+			scout.rightClick(Game.getInstance().self().getStartLocation());
+		}
 		
 		if(toScout){
 			for(TilePosition tp: myMap.getStartSpots()){
@@ -315,10 +316,6 @@ public class LurkerDrop extends EmptyFixedBot{
 			}
 
 			scout.rightClick(scoutTarget);
-		}
-		
-		if(scoutTarget == null){
-			scout.rightClick(Game.getInstance().self().getStartLocation());
 		}
 		
 		if(scoutTarget!=null){
@@ -373,7 +370,6 @@ public class LurkerDrop extends EmptyFixedBot{
 		}
 		if(unit.getType().equals(UnitType.getUnitType(overlord))) {
 			buildOvie = false;
-			System.out.println("overlord showed");
 		}
 		//if(unit.getTilePosition().equals(scoutTarget))
 			//scoutTarget = null;
@@ -435,6 +431,25 @@ public class LurkerDrop extends EmptyFixedBot{
 			hydraDen = u;
 		if(u.getType().equals(UnitType.getUnitType(extractor)))
 			myExtractor = u;
+	}
+	
+	@Override
+	public void onUnitDestroy(ROUnit unit) {
+		Unit u = UnitUtils.assumeControl(unit);
+		if(u.getType().equals(UnitType.getUnitType(hatchery)))
+			bases.remove(u);
+		if(u.getType().equals(UnitType.getUnitType(larva)))
+			larvae.remove(u);
+		if(u.getType().equals(UnitType.getUnitType(drone)))
+			drones.remove(u);
+		if(u.getType().equals(UnitType.getUnitType(overlord)))
+			ovies.remove(u);
+		if(u.getType().equals(UnitType.getUnitType(zergling)))
+			lings.remove(u);
+		if(u.getType().equals(UnitType.getUnitType(hydralisk)))
+			hydras.remove(u);
+		if(u.getType().equals(UnitType.getUnitType(lurker)))
+			lurkers.remove(u);
 	}
 	
 	public static void main(String[] args) {
