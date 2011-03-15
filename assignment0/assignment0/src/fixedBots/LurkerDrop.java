@@ -11,6 +11,7 @@ import org.bwapi.proxy.ProxyBotFactory;
 import org.bwapi.proxy.ProxyServer;
 import org.bwapi.proxy.model.Game;
 import org.bwapi.proxy.model.Order;
+import org.bwapi.proxy.model.Position;
 import org.bwapi.proxy.model.ROUnit;
 import org.bwapi.proxy.model.TechType;
 import org.bwapi.proxy.model.TilePosition;
@@ -352,8 +353,24 @@ public class LurkerDrop extends EmptyFixedBot{
 				mover.load(u);
 			}
 		}
-		mover.unloadAll(position)
 		
+		for(Unit m: ovies){
+			if(m.isIdle()&&m.getLoadedUnits().size()==2){
+				Position p = randomNearby(getTarget(),10);
+				m.unloadAll(p);
+			}
+		}
+	}
+	
+	public Unit getTarget(){
+		ROUnit target = null;
+		for(ROUnit b: myMap.getBuildings()){
+			if(Game.getInstance().self().isEnemy(b.getPlayer())){
+				target = b;
+				break;
+			}
+		}
+		return (Unit)target;
 	}
 	
 	public void gasFrame(){
@@ -461,6 +478,7 @@ public class LurkerDrop extends EmptyFixedBot{
 	
 	@Override
 	public void onUnitDestroy(ROUnit unit) {
+		super.onUnitDestroy(unit);
 		Unit u = UnitUtils.assumeControl(unit);
 		if(u.getType().equals(UnitType.getUnitType(hatchery)))
 			bases.remove(u);
