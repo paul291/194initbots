@@ -60,6 +60,7 @@ public class LurkerDrop extends EmptyFixedBot{
 	private boolean toScout = false;
 	private Unit scout;
 	private TilePosition scoutTarget;
+	private boolean buildOvie = false;
 	
 	boolean dropTech;
 	boolean lurkTech;
@@ -174,7 +175,7 @@ public class LurkerDrop extends EmptyFixedBot{
 				larvae.remove(morpher);
 				return true;
 			}
-			if(getSupply()<1 && !buildOrder.get(0).equals(overlord))
+			if(getSupply()<1 && !buildOvie)
 				buildOrder.add(0,new BuildCommand(overlord));
 		}else if(t.equals(UnitType.getUnitType(extractor))){
 			if(getMinerals() >= t.mineralPrice())
@@ -204,9 +205,8 @@ public class LurkerDrop extends EmptyFixedBot{
 			}else if(hydras.isEmpty()){
 				buildOrder.add(0,new BuildCommand(hydralisk));
 			}
-			if(getSupply() < 2 && !buildOrder.get(0).equals(overlord)) {
+			if(getSupply() < 2 && !buildOvie)
 				buildOrder.add(0, new BuildCommand(overlord));
-			}
 		}else if(t.equals(UnitType.getUnitType(lair))){
 			if(getMinerals() >= t.mineralPrice() && Game.getInstance().self().gas() >= t.gasPrice()){
 				Unit morpher = (Unit) findClosest(bases,area);
@@ -364,6 +364,9 @@ public class LurkerDrop extends EmptyFixedBot{
 		if(unit.getType().isBuilding()){
 			myMap.addBuilding(unit);
 		}
+		if(unit.getType().equals(UnitType.getUnitType(overlord))) {
+			buildOvie = false;
+		}
 		//if(unit.getTilePosition().equals(scoutTarget))
 			//scoutTarget = null;
 	}
@@ -383,8 +386,10 @@ public class LurkerDrop extends EmptyFixedBot{
 			larvae.add(u);
 		if(u.getType().equals(UnitType.getUnitType(drone)))
 			drones.add(u);
-		if(u.getType().equals(UnitType.getUnitType(overlord)))
+		if(u.getType().equals(UnitType.getUnitType(overlord))) {
 			ovies.add(u);
+			buildOvie = true;
+		}
 		if(u.getType().equals(UnitType.getUnitType(zergling)))
 			lings.add(u);
 		if(u.getType().equals(UnitType.getUnitType(hydralisk)))
@@ -408,8 +413,10 @@ public class LurkerDrop extends EmptyFixedBot{
 			//larvae.add(u);
 		if(u.getType().equals(UnitType.getUnitType(drone)))
 			drones.add(u);
-		if(u.getType().equals(UnitType.getUnitType(overlord)))
+		if(u.getType().equals(UnitType.getUnitType(overlord))) {
 			ovies.add(u);
+			buildOvie = true;
+		}
 		if(u.getType().equals(UnitType.getUnitType(zergling)))
 			lings.add(u);
 		if(u.getType().equals(UnitType.getUnitType(hydralisk)))
