@@ -189,6 +189,9 @@ public class LurkerDrop extends EmptyFixedBot{
 			}else if(hydras.isEmpty()){
 				buildOrder.add(new BuildCommand(hydralisk));
 			}
+			if(getSupply() < 2) {
+				buildOrder.add(0, new BuildCommand(overlord));
+			}
 		}else if(t.equals(UnitType.getUnitType(lair))){
 			if(getMinerals() >= t.mineralPrice() && Game.getInstance().self().gas() >= t.gasPrice()){
 				Unit morpher = (Unit) findClosest(bases,area);
