@@ -290,7 +290,8 @@ public class LurkerDrop extends EmptyFixedBot{
 		gasFrame();
 		buildNext();
 		attack();
-		scout();
+		if(toScout)
+			scout();
 		if(drones.size() >=9)
 			toScout = true;
 	}
