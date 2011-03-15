@@ -3,8 +3,12 @@ package fixedBots;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
+import org.bwapi.proxy.ProxyBot;
+import org.bwapi.proxy.ProxyBotFactory;
+import org.bwapi.proxy.ProxyServer;
 import org.bwapi.proxy.model.Game;
 import org.bwapi.proxy.model.Order;
 import org.bwapi.proxy.model.ROUnit;
@@ -14,6 +18,7 @@ import org.bwapi.proxy.model.Unit;
 import org.bwapi.proxy.model.UnitType;
 import org.bwapi.proxy.model.UpgradeType;
 
+import edu.berkeley.nlp.starcraft.overmind.Overmind;
 import edu.berkeley.nlp.starcraft.util.UnitUtils;
 
 
@@ -400,6 +405,19 @@ public class LurkerDrop extends EmptyFixedBot{
 			hydraDen = u;
 		if(u.getType().equals(UnitType.getUnitType(extractor)))
 			myExtractor = u;
+	}
+	
+	public static void main(String[] args) {
+		ProxyBotFactory factory = new ProxyBotFactory() {
+
+			@Override
+			public ProxyBot getBot(Game g) {
+				return new Overmind(new MineMineMine(), new Properties());
+			}
+
+		};
+		new ProxyServer(factory, ProxyServer.extractPort(args.length> 0 ? args[0] : null)).run();
+
 	}
 
 }
