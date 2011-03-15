@@ -174,7 +174,7 @@ public class LurkerDrop extends EmptyFixedBot{
 				larvae.remove(morpher);
 				return true;
 			}
-			if(getSupply()<1)
+			if(getSupply()<1 && !buildOrder.get(0).equals(overlord))
 				buildOrder.add(0,new BuildCommand(overlord));
 		}else if(t.equals(UnitType.getUnitType(extractor))){
 			if(getMinerals() >= t.mineralPrice())
@@ -204,7 +204,7 @@ public class LurkerDrop extends EmptyFixedBot{
 			}else if(hydras.isEmpty()){
 				buildOrder.add(0,new BuildCommand(hydralisk));
 			}
-			if(getSupply() < 2) {
+			if(getSupply() < 2 && !buildOrder.get(0).equals(overlord)) {
 				buildOrder.add(0, new BuildCommand(overlord));
 			}
 		}else if(t.equals(UnitType.getUnitType(lair))){
