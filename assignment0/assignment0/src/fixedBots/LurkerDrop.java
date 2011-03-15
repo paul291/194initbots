@@ -333,9 +333,27 @@ public class LurkerDrop extends EmptyFixedBot{
 				u.burrow();
 		}
 		for(Unit u: lurkers) {
-			if(!u.isBurrowed() && close(enemyUnits(),u.getTilePosition()));
+			if(!u.isBurrowed() && close(enemyUnits(),u.getTilePosition()))
 				u.burrow();
+			else if(!defenders.contains(u) && u.isBurrowed())
+				u.unburrow();
 		}
+		Unit mover = null;
+		if(ovies.isEmpty()) return;
+		for(Unit u : ovies) {
+			if(u.isIdle()) {
+				mover = u;
+				break;
+			}
+		}
+		if(mover == null) return;
+		for(Unit u: lurkers) {
+			if(!defenders.contains(u) && mover.getLoadedUnits().size() < 2) {
+				mover.load(u);
+			}
+		}
+		mover.unloadAll(position)
+		
 	}
 	
 	public void gasFrame(){
