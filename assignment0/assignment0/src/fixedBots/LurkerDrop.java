@@ -124,6 +124,19 @@ public class LurkerDrop extends EmptyFixedBot{
 				buildOrder.add(0,lastOrder);
 			}
 		}
+		
+		if(buildOrder.size() < 5)
+			buildContinue();
+	}
+	
+	public void buildContinue(){
+		if(getSupply() < 4)
+			buildOrder.add(new BuildCommand(overlord));
+		
+		if(drones.size() < 18)
+			buildOrder.add(new BuildCommand(drone));
+		
+		buildOrder.add(new BuildCommand(lurker));
 	}
 	
 	public boolean createUnit(UnitType t, TilePosition area){
@@ -187,7 +200,7 @@ public class LurkerDrop extends EmptyFixedBot{
 				hydras.remove(0);
 				return true;
 			}else if(hydras.isEmpty()){
-				buildOrder.add(new BuildCommand(hydralisk));
+				buildOrder.add(0,new BuildCommand(hydralisk));
 			}
 		}else if(t.equals(UnitType.getUnitType(lair))){
 			if(getMinerals() >= t.mineralPrice() && Game.getInstance().self().gas() >= t.gasPrice()){
@@ -253,9 +266,6 @@ public class LurkerDrop extends EmptyFixedBot{
 		buildOrder.add(new BuildCommand(drone));
 		buildOrder.add(new BuildCommand(drone));
 		//buildOrder.add(new BuildCommand(drone));
-		for(int i = 0; i<5; i++){
-			buildOrder.add(new BuildCommand(hydralisk));
-		}
 		for(int i = 0; i<6; i++){
 			buildOrder.add(new BuildCommand(lurker));
 		}
@@ -286,7 +296,7 @@ public class LurkerDrop extends EmptyFixedBot{
 		else if(scout == null)
 			scout = ovies.get(0);
 		
-		if(toScout&&!scouted.containsAll(myMap.getStartSpots())){
+		if(toScout){
 			if(scoutTarget != null) return;
 			for(TilePosition tp: myMap.getStartSpots()){
 				if(scouted.contains(tp)) continue;
@@ -299,8 +309,10 @@ public class LurkerDrop extends EmptyFixedBot{
 		}
 		
 		if(scoutTarget!=null){
-			if(close(scout.getTilePosition(), scoutTarget))
+			if(close(scout.getTilePosition(), scoutTarget)){
 				scoutTarget = null;
+				scouted.add(scoutTarget);
+			}
 		}
 	}
 	
