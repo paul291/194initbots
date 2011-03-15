@@ -218,6 +218,14 @@ public abstract class EmptyFixedBot extends AbstractCerebrate implements Strateg
 		return x+y < 5;
 	}
 	
+	public boolean close(List<ROUnit> units, TilePosition t1) {
+		for(ROUnit u : units) {
+			if(close(u.getTilePosition(), t1))
+				return true;
+		}
+		return false;
+	}
+	
 	// Feel free to add command and things here.
 	// bindFields will bind all member variables of the object
 	// commands should be self explanatory...

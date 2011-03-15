@@ -51,6 +51,7 @@ public class LurkerDrop extends EmptyFixedBot{
 	List<Unit> lings = new ArrayList<Unit>();
 	List<Unit> hydras = new ArrayList<Unit>();
 	List<Unit> lurkers = new ArrayList<Unit>();
+	List<Unit> defenders = new ArrayList<Unit>();
 	Unit spawnPool;
 	Unit hydraDen;
 	Unit extractDrone;
@@ -327,8 +328,12 @@ public class LurkerDrop extends EmptyFixedBot{
 	}
 	
 	public void attack(){
-		for(Unit u: lurkers){
+		for(Unit u: defenders){
 			if(!u.isBurrowed())
+				u.burrow();
+		}
+		for(Unit u: lurkers) {
+			if(!u.isBurrowed() && close(enemyUnits(),u.getTilePosition()));
 				u.burrow();
 		}
 	}
@@ -423,8 +428,11 @@ public class LurkerDrop extends EmptyFixedBot{
 			lings.add(u);
 		if(u.getType().equals(UnitType.getUnitType(hydralisk)))
 			hydras.add(u);
-		if(u.getType().equals(UnitType.getUnitType(lurker)))
+		if(u.getType().equals(UnitType.getUnitType(lurker))) {
+			if(lurkers.size() < 3)
+				defenders.add(u);
 			lurkers.add(u);
+		}
 		if(u.getType().equals(UnitType.getUnitType(spawningPool)))
 			spawnPool = u;
 		if(u.getType().equals(UnitType.getUnitType(den)))
