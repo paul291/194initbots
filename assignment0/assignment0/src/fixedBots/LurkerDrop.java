@@ -373,6 +373,7 @@ public class LurkerDrop extends EmptyFixedBot{
 		}
 		if(unit.getType().equals(UnitType.getUnitType(overlord))) {
 			buildOvie = false;
+			System.out.println("overlord showed");
 		}
 		//if(unit.getTilePosition().equals(scoutTarget))
 			//scoutTarget = null;
@@ -418,8 +419,10 @@ public class LurkerDrop extends EmptyFixedBot{
 			//larvae.add(u);
 		if(u.getType().equals(UnitType.getUnitType(drone)))
 			drones.add(u);
-		if(u.getType().equals(UnitType.getUnitType(overlord)))
+		if(u.getType().equals(UnitType.getUnitType(overlord))) {
 			ovies.add(u);
+			buildOvie = false;
+		}
 		if(u.getType().equals(UnitType.getUnitType(zergling)))
 			lings.add(u);
 		if(u.getType().equals(UnitType.getUnitType(hydralisk)))
