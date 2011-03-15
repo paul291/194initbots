@@ -123,8 +123,6 @@ public class LurkerDrop extends EmptyFixedBot{
 				drones.add(lastBuilder);
 				buildOrder.add(0,lastOrder);
 			}
-		}else{
-			System.out.println(lastBuilder.getOrder());
 		}
 	}
 	
@@ -413,7 +411,7 @@ public class LurkerDrop extends EmptyFixedBot{
 
 			@Override
 			public ProxyBot getBot(Game g) {
-				return new Overmind(new MineMineMine(), new Properties());
+				return new Overmind(new LurkerDrop(), new Properties());
 			}
 
 		};
