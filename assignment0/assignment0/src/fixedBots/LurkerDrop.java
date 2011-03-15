@@ -175,8 +175,10 @@ public class LurkerDrop extends EmptyFixedBot{
 				larvae.remove(morpher);
 				return true;
 			}
-			if(getSupply()<1 && !buildOvie)
+			if(getSupply()<1 && !buildOvie) {
 				buildOrder.add(0,new BuildCommand(overlord));
+				buildOvie = true;
+			}
 		}else if(t.equals(UnitType.getUnitType(extractor))){
 			if(getMinerals() >= t.mineralPrice())
 				return false;
@@ -205,8 +207,10 @@ public class LurkerDrop extends EmptyFixedBot{
 			}else if(hydras.isEmpty()){
 				buildOrder.add(0,new BuildCommand(hydralisk));
 			}
-			if(getSupply() < 2 && !buildOvie)
+			if(getSupply() < 2 && !buildOvie) {
 				buildOrder.add(0, new BuildCommand(overlord));
+				buildOvie = true;
+			}
 		}else if(t.equals(UnitType.getUnitType(lair))){
 			if(getMinerals() >= t.mineralPrice() && Game.getInstance().self().gas() >= t.gasPrice()){
 				Unit morpher = (Unit) findClosest(bases,area);
@@ -389,10 +393,8 @@ public class LurkerDrop extends EmptyFixedBot{
 			larvae.add(u);
 		if(u.getType().equals(UnitType.getUnitType(drone)))
 			drones.add(u);
-		if(u.getType().equals(UnitType.getUnitType(overlord))) {
+		if(u.getType().equals(UnitType.getUnitType(overlord)))
 			ovies.add(u);
-			buildOvie = true;
-		}
 		if(u.getType().equals(UnitType.getUnitType(zergling)))
 			lings.add(u);
 		if(u.getType().equals(UnitType.getUnitType(hydralisk)))
@@ -416,10 +418,8 @@ public class LurkerDrop extends EmptyFixedBot{
 			//larvae.add(u);
 		if(u.getType().equals(UnitType.getUnitType(drone)))
 			drones.add(u);
-		if(u.getType().equals(UnitType.getUnitType(overlord))) {
+		if(u.getType().equals(UnitType.getUnitType(overlord)))
 			ovies.add(u);
-			buildOvie = true;
-		}
 		if(u.getType().equals(UnitType.getUnitType(zergling)))
 			lings.add(u);
 		if(u.getType().equals(UnitType.getUnitType(hydralisk)))
