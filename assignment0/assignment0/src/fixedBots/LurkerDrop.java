@@ -75,7 +75,7 @@ public class LurkerDrop extends EmptyFixedBot{
 				if(lairs.isEmpty()){
 					System.out.println("No lairs");
 				}else if(getMinerals() >= 200 && Game.getInstance().self().gas() >= 200){
-					if(lairs.get(0).isBeingConstructed())
+					if(lairs.get(0).isBeingConstructed()||lairs.get(0).isUpgrading())
 						return;
 					UnitUtils.assumeControl(lairs.get(0)).upgrade(UpgradeType.VENTRAL_SACS);
 					buildOrder.remove(0);
@@ -97,8 +97,8 @@ public class LurkerDrop extends EmptyFixedBot{
 				List<ROUnit> lairs = UnitUtils.getAllMy(UnitType.getUnitType(lair));
 				if(lairs.isEmpty()){
 					System.out.println("No lairs");
-				}else if(getMinerals() >= 200 && Game.getInstance().self().gas() >= 200){
-					if(lairs.get(0).isBeingConstructed())
+				}else if(getMinerals() >= 150 && Game.getInstance().self().gas() >= 150){
+					if(lairs.get(0).isBeingConstructed()||lairs.get(0).isUpgrading())
 						return;
 					UnitUtils.assumeControl(lairs.get(0)).upgrade(UpgradeType.PNEUMATIZED_CARAPACE);
 					buildOrder.remove(0);
@@ -243,7 +243,7 @@ public class LurkerDrop extends EmptyFixedBot{
 		buildOrder.add(new BuildCommand(drop));
 		buildOrder.add(new BuildCommand(den));
 		buildOrder.add(new BuildCommand(lurker_up));
-		buildOrder.add(new BuildCommand(ovieSpeed));
+		//buildOrder.add(new BuildCommand(ovieSpeed));
 		buildOrder.add(new BuildCommand(hydralisk));
 		buildOrder.add(new BuildCommand(hydralisk));
 		//buildOrder.add(new BuildCommand(overlord));
@@ -256,6 +256,7 @@ public class LurkerDrop extends EmptyFixedBot{
 		for(int i = 0; i<6; i++){
 			buildOrder.add(new BuildCommand(lurker));
 		}
+		buildOrder.add(new BuildCommand(ovieSpeed));
 		
 		//buildOrder.add(new BuildCommand(extractor));
 	}
