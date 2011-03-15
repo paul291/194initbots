@@ -355,6 +355,8 @@ public class LurkerDrop extends EmptyFixedBot{
 		}
 		
 		for(Unit m: ovies){
+			if(m.getLoadedUnits().size() > 0 && close(enemyUnits(),m.getTilePosition()))
+				m.unloadAll();
 			if(m.isIdle()&&m.getLoadedUnits().size()==2){
 				Position p = randomNearby(getTarget(),10);
 				m.unloadAll(p);
