@@ -259,7 +259,7 @@ public class LurkerDrop extends EmptyFixedBot{
 		buildOrder.add(new BuildCommand(zergling));
 		buildOrder.add(new BuildCommand(zergling));
 		buildOrder.add(new BuildCommand(zergling));
-		buildOrder.add(new BuildCommand(lingSpeed));
+		//buildOrder.add(new BuildCommand(lingSpeed));
 		buildOrder.add(new BuildCommand(drone));
 		buildOrder.add(new BuildCommand(lair));
 		buildOrder.add(new BuildCommand(overlord));
@@ -277,7 +277,7 @@ public class LurkerDrop extends EmptyFixedBot{
 		buildOrder.add(new BuildCommand(drone));
 		buildOrder.add(new BuildCommand(drone));
 		//buildOrder.add(new BuildCommand(drone));
-		for(int i = 0; i<6; i++){
+		for(int i = 0; i<2; i++){
 			buildOrder.add(new BuildCommand(lurker));
 		}
 		buildOrder.add(new BuildCommand(ovieSpeed));
@@ -336,7 +336,7 @@ public class LurkerDrop extends EmptyFixedBot{
 		for(Unit u: lurkers) {
 			if(!u.isBurrowed() && close(enemyUnits(),u.getTilePosition()))
 				u.burrow();
-			else if(!defenders.contains(u) && u.isBurrowed())
+			else if(!defenders.contains(u) && u.isBurrowed() && !close(enemyUnits(),u.getTilePosition()))
 				u.unburrow();
 		}
 		Unit mover = null;
@@ -349,7 +349,7 @@ public class LurkerDrop extends EmptyFixedBot{
 		}
 		if(mover == null) return;
 		for(Unit u: lurkers) {
-			if(!defenders.contains(u) && mover.getLoadedUnits().size() < 2 && !u.isBurrowed() && u.isIdle()) {
+			if(!defenders.contains(u) && mover.getLoadedUnits().size() < 2) {
 				mover.load(u);
 			}
 		}
@@ -357,22 +357,28 @@ public class LurkerDrop extends EmptyFixedBot{
 		for(Unit m: ovies){
 			if(m.getLoadedUnits().size() > 0 && close(enemyUnits(),m.getTilePosition()))
 				m.unloadAll();
-			if(m.isIdle()&&m.getLoadedUnits().size()==2){
-				Position p = randomNearby(getTarget(),10);
+			if(m.isIdle()&&m.getLoadedUnits().size()>0){
+				
+				TilePosition t = getTarget();
+				Position p = new Position(t.x()*32+(int)(Math.random()*10)-10,
+						t.y()*32 + (int)(Math.random()*10) - 10);
 				m.unloadAll(p);
+				System.out.println(t.x() + " " + t.y());
 			}
 		}
 	}
 	
-	public Unit getTarget(){
+	public TilePosition getTarget(){
 		ROUnit target = null;
 		for(ROUnit b: myMap.getBuildings()){
 			if(Game.getInstance().self().isEnemy(b.getPlayer())){
 				target = b;
+				System.out.println(target.getType().getName());
 				break;
 			}
 		}
-		return (Unit)target;
+		return target.getLastKnownTilePosition();
+		
 	}
 	
 	public void gasFrame(){
