@@ -308,10 +308,12 @@ public class LurkerDrop extends EmptyFixedBot{
 				if(scouted.contains(tp)) continue;
 				scoutTarget = tp;
 			}
-			if(scoutTarget == null){
-				scout.rightClick(Game.getInstance().self().getStartLocation());
-			}
+
 			scout.rightClick(scoutTarget);
+		}
+		
+		if(scoutTarget == null){
+			scout.rightClick(Game.getInstance().self().getStartLocation());
 		}
 		
 		if(scoutTarget!=null){
