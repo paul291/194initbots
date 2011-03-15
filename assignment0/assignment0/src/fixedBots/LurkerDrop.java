@@ -174,6 +174,8 @@ public class LurkerDrop extends EmptyFixedBot{
 				larvae.remove(morpher);
 				return true;
 			}
+			if(getSupply()<1)
+				buildOrder.add(0,new BuildCommand(overlord));
 		}else if(t.equals(UnitType.getUnitType(extractor))){
 			if(getMinerals() >= t.mineralPrice())
 				return false;
