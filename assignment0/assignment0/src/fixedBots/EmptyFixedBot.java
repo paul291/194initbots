@@ -215,7 +215,7 @@ public abstract class EmptyFixedBot extends AbstractCerebrate implements Strateg
 	public boolean close(TilePosition t1, TilePosition t2){
 		int x = Math.abs(t1.x() - t2.x());
 		int y = Math.abs(t1.y() - t2.y());
-		return x+y < 5;
+		return x+y < 9;
 	}
 	
 	public boolean close(List<ROUnit> units, TilePosition t1) {

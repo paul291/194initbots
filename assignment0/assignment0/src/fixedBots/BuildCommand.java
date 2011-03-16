@@ -14,4 +14,8 @@ public class BuildCommand {
 		order = s;
 		loc = null;
 	}
+	
+	public boolean equals(BuildCommand c){
+		return c.equals(order);
+	}
 }

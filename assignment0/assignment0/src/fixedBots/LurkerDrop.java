@@ -121,25 +121,28 @@ public class LurkerDrop extends EmptyFixedBot{
 					lastBuilder.getOrder().equals(Order.MOVE_TO_MINERALS)||
 					lastBuilder.getOrder().equals(Order.GUARD)||
 					lastBuilder.isGatheringGas()||
-					lastBuilder.isGatheringMinerals()){
+					lastBuilder.isGatheringMinerals()||lastBuilder.isIdle()){
 				buildLock = false;
 				drones.add(lastBuilder);
 				buildOrder.add(0,lastOrder);
 			}
 		}
-		
 		if(buildOrder.size() < 5)
 			buildContinue();
+		System.out.println(buildOrder.get(0).order);
 	}
 	
 	public void buildContinue(){
-		if(getSupply() < 4)
+		if(getSupply() < 2 && !buildOrder.contains(new BuildCommand(overlord))){
 			buildOrder.add(new BuildCommand(overlord));
-		
-		if(drones.size() < 18)
+		}
+		if(drones.size() < 15)
 			buildOrder.add(new BuildCommand(drone));
 		
 		buildOrder.add(new BuildCommand(lurker));
+		
+		if(getSupply() > 9 && getMinerals() > 300 && Game.getInstance().self().gas() < 200)
+			buildOrder.add(new BuildCommand(zergling));
 	}
 	
 	public boolean createUnit(UnitType t, TilePosition area){
@@ -212,6 +215,7 @@ public class LurkerDrop extends EmptyFixedBot{
 			if(getSupply() < 2 && !buildOvie) {
 				buildOrder.add(0, new BuildCommand(overlord));
 				buildOvie = true;
+				System.out.println("adding new ovy");
 			}
 		}else if(t.equals(UnitType.getUnitType(lair))){
 			if(getMinerals() >= t.mineralPrice() && Game.getInstance().self().gas() >= t.gasPrice()){
@@ -329,6 +333,20 @@ public class LurkerDrop extends EmptyFixedBot{
 	}
 	
 	public void attack(){
+		int zerglingCount = 0;
+		for(Unit u: lings){
+			if(u.isIdle())
+				zerglingCount++;
+		}
+		if(zerglingCount == 12){
+			for(Unit u: lings){
+				if(u.isIdle()){
+					TilePosition tp = getTarget(u);
+					if(tp!=null)
+						u.attackMove(new Position(tp.x()*32,tp.y()*32));
+				}
+			}
+		}
 		for(Unit u: defenders){
 			if(!u.isBurrowed())
 				u.burrow();
@@ -349,43 +367,59 @@ public class LurkerDrop extends EmptyFixedBot{
 		}
 		if(mover == null) return;
 		for(Unit u: lurkers) {
-			if(!defenders.contains(u) && mover.getLoadedUnits().size() < 2) {
+			if(!defenders.contains(u) && mover.getLoadedUnits().size() < 2&&!u.isBurrowed()) {
 				mover.load(u);
 			}
 		}
 		
 		for(Unit m: ovies){
-			if(m.getLoadedUnits().size() > 0 && close(enemyUnits(),m.getTilePosition()))
+			/*if(m.getLoadedUnits().size() > 0 && close(enemyUnits(),m.getTilePosition())){
 				m.unloadAll();
+				System.out.println("unloading");
+			}*/
 			if(m.isIdle()&&m.getLoadedUnits().size()>0){
 				
-				TilePosition t = getTarget();
-				Position p = new Position(t.x()*32+(int)(Math.random()*10)-10,
-						t.y()*32 + (int)(Math.random()*10) - 10);
+				TilePosition t = getTarget(m);
+				if(t==null)
+					t = new TilePosition((int)(Math.random()*myMap.getWidth()),(int)(Math.random()*myMap.getHeight()));
+				Position p = new Position(t.x()*32+(int)(Math.random()*50)-50,
+						t.y()*32 + (int)(Math.random()*50) - 50);
 				m.unloadAll(p);
 				System.out.println(t.x() + " " + t.y());
 			}
 		}
 	}
 	
-	public TilePosition getTarget(){
+	public int computeDist(TilePosition a, TilePosition b){
+		int dx = Math.abs(a.x() - b.x());
+		int dy = Math.abs(a.y() - b.y());
+		return dx+dy;
+	}
+	
+	public TilePosition getTarget(Unit u){
 		ROUnit target = null;
+		int best = 10000;
 		for(ROUnit b: myMap.getBuildings()){
 			if(Game.getInstance().self().isEnemy(b.getPlayer())){
-				target = b;
-				System.out.println(target.getType().getName());
-				break;
+				int dist = computeDist(u.getTilePosition(),b.getLastKnownTilePosition());
+				if(dist < best){
+					best = dist;
+					target = b;
+					System.out.println(target.getType().getName());
+				}
 			}
 		}
+		if(target == null)
+			return null;
 		return target.getLastKnownTilePosition();
 		
 	}
 	
 	public void gasFrame(){
-		if(myExtractor == null && spawnPool!=null && spawnPool.isBeingConstructed()){
+		if(myExtractor == null && spawnPool!=null && (spawnPool.isBeingConstructed()||spawnPool.isCompleted())){
 			if(extractDrone==null)
 				extractDrone = drones.get(0);
-			ROUnit closestPatch = UnitUtils.getClosest(drones.get(0), Game.getInstance().getGeysers());
+			ROUnit closestPatch = UnitUtils.getClosest(extractDrone, Game.getInstance().getGeysers());
 			if (closestPatch != null) {
 				extractDrone.build(closestPatch.getTilePosition(), UnitType.getUnitType("Zerg Extractor"));
 				drones.remove(extractDrone);
@@ -487,6 +521,8 @@ public class LurkerDrop extends EmptyFixedBot{
 	@Override
 	public void onUnitDestroy(ROUnit unit) {
 		super.onUnitDestroy(unit);
+		if(Game.getInstance().self().isEnemy(unit.getPlayer()))
+			return;
 		Unit u = UnitUtils.assumeControl(unit);
 		if(u.getType().equals(UnitType.getUnitType(hatchery)))
 			bases.remove(u);
@@ -494,17 +530,29 @@ public class LurkerDrop extends EmptyFixedBot{
 			larvae.remove(u);
 		if(u.getType().equals(UnitType.getUnitType(drone)))
 			drones.remove(u);
-		if(u.getType().equals(UnitType.getUnitType(overlord)))
+		if(u.getType().equals(UnitType.getUnitType(overlord))){
 			ovies.remove(u);
+			if(!buildOrder.get(0).order.equals(overlord ) || getSupply() < 2)
+				buildOrder.add(0,new BuildCommand(overlord));
+		}
 		if(u.getType().equals(UnitType.getUnitType(zergling)))
 			lings.remove(u);
 		if(u.getType().equals(UnitType.getUnitType(hydralisk)))
 			hydras.remove(u);
 		if(u.getType().equals(UnitType.getUnitType(lurker)))
 			lurkers.remove(u);
+		if(u.getType().equals(UnitType.getUnitType(spawningPool))){
+			spawnPool = null;
+			buildOrder.add(new BuildCommand(spawningPool));
+		}
+		if(u.getType().equals(UnitType.getUnitType(den))){
+			hydraDen = null;
+			buildOrder.add(new BuildCommand(den));
+		}
+			
 	}
 	
-	public static void main(String[] args) {
+/*	public static void main(String[] args) {
 		ProxyBotFactory factory = new ProxyBotFactory() {
 
 			@Override
@@ -515,6 +563,6 @@ public class LurkerDrop extends EmptyFixedBot{
 		};
 		new ProxyServer(factory, ProxyServer.extractPort(args.length> 0 ? args[0] : null)).run();
 
-	}
+	}*/
 
 }
