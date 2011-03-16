@@ -129,7 +129,7 @@ public class LurkerDrop extends EmptyFixedBot{
 		}
 		if(buildOrder.size() < 5)
 			buildContinue();
-		System.out.println(buildOrder.get(0).order);
+		System.out.println(buildOrder.get(0));
 	}
 	
 	public void buildContinue(){
@@ -150,6 +150,15 @@ public class LurkerDrop extends EmptyFixedBot{
 			area = bases.get(0).getTilePosition();
 		}
 		//System.out.println("Trying to build " + t.getName());
+		if(!t.equals(UnitType.getUnitType(overlord))&&!t.isBuilding()){
+			if(getSupply() < 1){
+				for(Unit u: ovies){
+					if(u.isMorphing())
+						return false;
+				}
+				return createUnit(UnitType.getUnitType(overlord),null);
+			}
+		}
 		 if(t.equals(UnitType.getUnitType(spawningPool)) || t.equals(UnitType.getUnitType(den)) 
 				|| t.equals(UnitType.getUnitType(hatchery))){
 			if(getMinerals() >= t.mineralPrice() && Game.getInstance().self().gas() >= t.gasPrice()&& !drones.isEmpty()){
@@ -169,13 +178,17 @@ public class LurkerDrop extends EmptyFixedBot{
 			}
 		}else if(t.equals(UnitType.getUnitType(zergling)) || t.equals(UnitType.getUnitType(hydralisk))
 				|| t.equals(UnitType.getUnitType(drone)) || t.equals(UnitType.getUnitType(overlord))){
-			if(getMinerals() >= t.mineralPrice() && getSupply() >= t.supplyRequired()
+			if(getMinerals() >= t.mineralPrice() && (getSupply() >= t.supplyRequired() || t.equals(UnitType.getUnitType(overlord)))
 					&& Game.getInstance().self().gas() >= t.gasPrice() && !larvae.isEmpty()){
 				Unit morpher = (Unit)findClosest(larvae,area);
 				if(t.equals(UnitType.getUnitType(zergling)) && (spawnPool==null ||!spawnPool.isCompleted()))
 					return false;
 				if(t.equals(UnitType.getUnitType(hydralisk)) && (hydraDen==null ||!hydraDen.isCompleted()))
 					return false;
+				if(t.equals(UnitType.getUnitType(overlord))){
+					ovies.add(morpher);
+				}
+					
 				morpher.morph(t);
 				larvae.remove(morpher);
 				return true;
@@ -472,8 +485,8 @@ public class LurkerDrop extends EmptyFixedBot{
 			larvae.add(u);
 		if(u.getType().equals(UnitType.getUnitType(drone)))
 			drones.add(u);
-		if(u.getType().equals(UnitType.getUnitType(overlord)))
-			ovies.add(u);
+		//if(u.getType().equals(UnitType.getUnitType(overlord)))
+			//ovies.add(u);
 		if(u.getType().equals(UnitType.getUnitType(zergling)))
 			lings.add(u);
 		if(u.getType().equals(UnitType.getUnitType(hydralisk)))
@@ -498,7 +511,7 @@ public class LurkerDrop extends EmptyFixedBot{
 		if(u.getType().equals(UnitType.getUnitType(drone)))
 			drones.add(u);
 		if(u.getType().equals(UnitType.getUnitType(overlord))) {
-			ovies.add(u);
+			//ovies.add(u);
 			buildOvie = false;
 		}
 		if(u.getType().equals(UnitType.getUnitType(zergling)))
