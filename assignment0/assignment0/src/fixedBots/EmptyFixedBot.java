@@ -63,7 +63,7 @@ public abstract class EmptyFixedBot extends AbstractCerebrate implements Strateg
 		myBases = new ArrayList<Unit>();
 		myRace = Game.getInstance().self().getRace();
 		myMap = new SCMap();
-		Game.getInstance().setLocalSpeed(GAME_SPEED);
+		//Game.getInstance().setLocalSpeed(GAME_SPEED);
 		for(ROUnit u: Game.getInstance().self().getUnits()) {
 			if(u.getType().isWorker()) {
 				workers.add(UnitUtils.assumeControl(u));

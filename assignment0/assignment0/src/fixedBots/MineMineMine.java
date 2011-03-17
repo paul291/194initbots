@@ -122,17 +122,5 @@ public class MineMineMine extends AbstractCerebrate implements Strategy {
 		
   }
 	
-	public static void main(String[] args) {
-		ProxyBotFactory factory = new ProxyBotFactory() {
-
-			@Override
-			public ProxyBot getBot(Game g) {
-				return new Overmind(new MineMineMine(), new Properties());
-			}
-
-		};
-		new ProxyServer(factory, ProxyServer.extractPort(args.length> 0 ? args[0] : null)).run();
-
-	}
 
 }
